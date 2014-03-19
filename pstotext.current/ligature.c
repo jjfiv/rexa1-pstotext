@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "ligature.h"
 #include "trie.h"
 
@@ -19,7 +21,8 @@ static int longest_lig_at_pos( unsigned char *word, int i ) {
   int lig_id;
   int found_lig_id = -1;
   int pos_in_lig = 0;
-  int *found_lig_ids = (int*) malloc( N_LIGATURES * sizeof( int ) );
+  int found_lig_ids[N_LIGATURES] = {0};
+  //int *found_lig_ids = (int*) malloc( N_LIGATURES * sizeof( int ) );
   for ( lig_id = 0; lig_id < N_LIGATURES; ++lig_id ) {
     found_lig_ids[lig_id] = LIGATURE_LENGTHS[lig_id];
   }
@@ -50,7 +53,7 @@ static int longest_lig_at_pos( unsigned char *word, int i ) {
     }
   }
   
-  free( found_lig_ids );
+  //free( found_lig_ids );
   return found_lig_id;
 }
 
@@ -244,8 +247,8 @@ static Trie* find_ligatures( char* dictionary_file ) {
   if ( words_file == NULL ) {
     return 0;
   }
-  unsigned char *buf = NULL;
-  int n_read, buf_size = 0;
+  char *buf = NULL;
+  size_t n_read, buf_size = 0;
   Trie *trie = trie_new( "", NULL );
   while ( ( n_read = getline( &buf, &buf_size, words_file ) ) != -1 ) {
     if ( buf[n_read - 1] == '\n' ) --n_read;

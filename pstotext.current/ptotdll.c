@@ -1758,9 +1758,9 @@ int DLLEXPORT pstotextClose (instance, word)
   char *buf = (char*) malloc( buf_capacity + 1 );
   char fontBuf[BUFSIZE];
 
-  char *header = "\n<fonts>";
+  const char * const header = "\n<fonts>";
   int header_len = strlen( header );
-  char *footer = "\n</fonts>";
+  const char * const footer = "\n</fonts>";
   int footer_len = strlen( footer );
 
   UnwindAndProcessTokenStack( t, NULL_TOKEN, buf );
@@ -1802,7 +1802,7 @@ int DLLEXPORT pstotextClose (instance, word)
     }
   }
 
-  sprintf( buf + buf_len, footer );
+  strcat( buf + buf_len, footer );
   
   *word = buf;
   return 0;	

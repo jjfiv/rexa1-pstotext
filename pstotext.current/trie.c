@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "trie.h"
 
 /*
@@ -11,7 +12,7 @@
 
 static int _is_valid_word( unsigned char* );
 
-static char* strdup( char* s ) {
+/*static char* strdup( char* s ) {
   char *new_str;
   if ( s == NULL ) {
     return s;
@@ -19,7 +20,7 @@ static char* strdup( char* s ) {
   new_str = malloc( strlen( s ) + 1 );
   strcpy( new_str, s );
   return new_str;
-}
+}*/
 
 
 /* Creates a new tree node.  'prefix' is copied to newly allocated
