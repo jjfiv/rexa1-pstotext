@@ -1,3 +1,6 @@
 *.o
 pstotext
+generate-ligatures
 ocr.h
+rot270.h
+rot90.h
