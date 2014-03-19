@@ -343,7 +343,8 @@ static do_it(path) char *path; {
 
   paranoid_fwprintf( fileout, L"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<document>" );
 
-#define ZAP_BUFFER(ZZBUF) do { int i=0; for(;i<sizeof(ZZBUF);i++) (ZZBUF)[i]=0; } while(0)
+//#define ZAP_BUFFER(ZZBUF) do { int i=0; for(;i<sizeof(ZZBUF);i++) (ZZBUF)[i]=0; } while(0)
+#define ZAP_BUFFER(ZZBUF) do { memset(ZZBUF, 0, sizeof(ZZBUF)); } while(0)
 
   char lookahead_line[LINELEN];
   char *lookahead_line_available = fgets( lookahead_line, LINELEN, gs );
@@ -388,10 +389,10 @@ static do_it(path) char *path; {
     if (word!=NULL) {
       if (!bboxes) { // bboxes is set via -bboxes command-line option
         // fputs(pre, fileout); fputs(word, fileout); fputs(post, fileout);
-	if ( xmlOutputBuffer != NULL ) {
-	  // fputs( xmlOutputBuffer, fileout );	  
-	  paranoid_fwprintf(fileout, L"%s", xmlOutputBuffer);
-	}
+        if ( xmlOutputBuffer != NULL ) {
+          // fputs( xmlOutputBuffer, fileout );	  
+          paranoid_fwprintf(fileout, L"%s", xmlOutputBuffer);
+        }
         if ( debug ) fputc('\n', stderr);
       }
       else {
@@ -484,7 +485,7 @@ int pcloseZ(FILE *fd, int pid)
   return waitstat;
 }
 
-main(argc, argv) int argc; char *argv[]; {
+int main(int argc, char *argv[]) {
   int i;
   char *arg;
 
@@ -527,3 +528,4 @@ main(argc, argv) int argc; char *argv[]; {
   if (explicitFiles==0) do_it(NULL);
   exit(0);
 }
+

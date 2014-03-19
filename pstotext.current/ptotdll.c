@@ -31,6 +31,11 @@
 #define FALSE 0
 #define TRUE 1
 
+// turn on edits by jfoley, march 2014 by default
+#ifndef CIIR_ONE_WORD_PER_TBOX
+  #define CIIR_ONE_WORD_PER_TBOX TRUE
+#endif
+
 #define MIN(a,b) ((a)<=(b)?(a):(b))
 #define MAX(a,b) ((b)<=(a)?(a):(b))
 
@@ -705,7 +710,7 @@ static void OutputTokenEnd(T* t, int tokenType, char* xmlOutputBuffer) {
     // xmlOutputBuffer
     char* cdataBuffer = GetOutputBuffer( t );
     sprintf( xmlOutputBuffer + strlen( xmlOutputBuffer ), 
-             "<tbox llx=\"%d\" lly=\"%d\" urx=\"%d\" ury=\"%d\" f=\"%d\"><![CDATA[%s]]></tbox>", 
+             "<tbox llx=\"%d\" lly=\"%d\" urx=\"%d\" ury=\"%d\" f=\"%d\"><![CDATA[%s]]></tbox>\n", 
 	     llx, lly, urx, ury, 
 	     fontIndex,
 	     cdataBuffer );
@@ -1141,7 +1146,7 @@ static void OutputWord( T *t,
 {
   double x0, y0, x1, y1, x2, y2, x3, y3;
   long blx, bly, toprx, topry, mid_y;
-  
+
   *word = NULL;
 
   Font f;
@@ -1314,7 +1319,7 @@ static void OutputWord( T *t,
 
     PushTokenStack( t, LINE_TOKEN );
     sprintf( localXmlBuffer + strlen( localXmlBuffer ), 
-             "\n<line>" );
+             "<line>\n" );
     t->linenum = 0;
   }
   else if ( newLine ) {
@@ -1323,7 +1328,7 @@ static void OutputWord( T *t,
     ClearOutputBuffer( t );
     PushTokenStack( t, LINE_TOKEN );
     sprintf( localXmlBuffer + strlen( localXmlBuffer ), 
-             "\n<line>" );
+             "<line>\n" );
     ++t->linenum;
   }
   else if ( newFont || newTextBox ) {
@@ -1332,36 +1337,61 @@ static void OutputWord( T *t,
     ClearOutputBuffer( t );
   }
   
-  // if we've encountered a new page, a new line, or a new font then
-  // we copy our block of XML output to the xmlOutputBuffer parameter
-  if ( strlen( localXmlBuffer ) > 0 ) {
-    strcpy( xmlOutputBuffer, localXmlBuffer );
-  }
-  printf("JFOLEY\n");
+  if(CIIR_ONE_WORD_PER_TBOX) {
 
-  if ( PeekTokenStack( t ) != TBOX_TOKEN ) {
-    PushTokenStack( t, TBOX_TOKEN );
+    if (*word != NULL) {
+      //fprintf(stderr, "JFOLEY.TBOX %s %d %d %d %d\n", *word, *lly, *llx, *ury, *urx);
+      PushTokenStack( t, TBOX_TOKEN );
 
-    PushIntArgStack( t, t->f );
-    PushDblArgStack( t, *lly );
-    PushDblArgStack( t, *llx );
-    PushDblArgStack( t, *ury );
-    PushDblArgStack( t, *urx );
-  }
-  else {
-    printf("JFOLEY\n");
-    // modify TBOX_TOKEN on stack
-    //PopDblArgStack( t );
-    //PopDblArgStack( t );
-    //PushDblArgStack( t, *ury );
-    //PushDblArgStack( t, *urx );
-    UnwindAndProcessTokenStack( t, TBOX_TOKEN, localXmlBuffer );
-    ClearOutputBuffer( t );
-  }
+      PushIntArgStack( t, t->f );
+      PushDblArgStack( t, *lly );
+      PushDblArgStack( t, *llx );
+      PushDblArgStack( t, *ury );
+      PushDblArgStack( t, *urx );
 
-  if ( *word != NULL ) {
-    // appends t->outputBuffer
-    AppendToOutputBuffer( t, *word );
+      // put word
+      // appends t->outputBuffer
+      AppendToOutputBuffer( t, *word );
+
+      // now put close tags
+      UnwindAndProcessTokenStack( t, TBOX_TOKEN, localXmlBuffer );
+      ClearOutputBuffer( t );
+    }
+
+    // if we've written XML locally, copy it to the XML output
+    if ( strlen( localXmlBuffer ) > 0 ) {
+      strcpy( xmlOutputBuffer, localXmlBuffer );
+    }
+  } else {
+    // if we've encountered a new page, a new line, or a new font then
+    // we copy our block of XML output to the xmlOutputBuffer parameter
+    if ( strlen( localXmlBuffer ) > 0 ) {
+      strcpy( xmlOutputBuffer, localXmlBuffer );
+    }
+    
+    if ( PeekTokenStack( t ) != TBOX_TOKEN ) {
+      // first word on line
+      PushTokenStack( t, TBOX_TOKEN );
+
+      PushIntArgStack( t, t->f );
+      PushDblArgStack( t, *lly );
+      PushDblArgStack( t, *llx );
+      PushDblArgStack( t, *ury );
+      PushDblArgStack( t, *urx );
+    }
+    else {
+      // nth word on line; modify line bounding box...
+      PopDblArgStack( t );
+      PopDblArgStack( t );
+      PushDblArgStack( t, *ury );
+      PushDblArgStack( t, *urx );
+    }
+
+    // this guards against line or page events
+    if ( *word != NULL ) {
+      // appends t->outputBuffer
+      AppendToOutputBuffer( t, *word );
+    }
   }
   
   t->lastFont = t->f;
@@ -1560,16 +1590,16 @@ static int ParseString(T* t,
       logGlyph( charCode, glyphIndex, "!!! glyph <= LastDvips" );
       char *str; int lstr; char tempstr[2];
       if (t->dvipsIsCork) {
-	if (glyphIndex <= LASTCorkSpecialGlyphs)
-	  str = CorkSpecialGlyphs[glyphIndex-FIRSTCorkSpecialGlyphs];
-	else if (glyphIndex == FIRSTCorkSpecialGlyphs+0337)
-	  str = "SS";
-	else if (glyphIndex == FIRSTCorkSpecialGlyphs+0377)
-	  str = "\337";
-	else {
-	  tempstr[0] = glyphIndex-FIRSTCorkSpecialGlyphs; tempstr[1] = '\0';
-	  str = &tempstr[0];
-	}
+        if (glyphIndex <= LASTCorkSpecialGlyphs)
+          str = CorkSpecialGlyphs[glyphIndex-FIRSTCorkSpecialGlyphs];
+        else if (glyphIndex == FIRSTCorkSpecialGlyphs+0337)
+          str = "SS";
+        else if (glyphIndex == FIRSTCorkSpecialGlyphs+0377)
+          str = "\337";
+        else {
+          tempstr[0] = glyphIndex-FIRSTCorkSpecialGlyphs; tempstr[1] = '\0';
+          str = &tempstr[0];
+        }
       }
       else if (glyphIndex <= LASTDvipsGlyphs) {
         /* Assume old text layout (OT1?). */
