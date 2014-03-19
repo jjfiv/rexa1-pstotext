@@ -1347,6 +1347,7 @@ static void OutputWord( T *t,
     PushDblArgStack( t, *urx );
   }
   else {
+    // modify TBOX_TOKEN on stack
     PopDblArgStack( t );
     PopDblArgStack( t );
     PushDblArgStack( t, *ury );
