@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #endif
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include "ptotdll.h"
@@ -1336,6 +1337,7 @@ static void OutputWord( T *t,
   if ( strlen( localXmlBuffer ) > 0 ) {
     strcpy( xmlOutputBuffer, localXmlBuffer );
   }
+  printf("JFOLEY\n");
 
   if ( PeekTokenStack( t ) != TBOX_TOKEN ) {
     PushTokenStack( t, TBOX_TOKEN );
@@ -1347,11 +1349,14 @@ static void OutputWord( T *t,
     PushDblArgStack( t, *urx );
   }
   else {
+    printf("JFOLEY\n");
     // modify TBOX_TOKEN on stack
-    PopDblArgStack( t );
-    PopDblArgStack( t );
-    PushDblArgStack( t, *ury );
-    PushDblArgStack( t, *urx );
+    //PopDblArgStack( t );
+    //PopDblArgStack( t );
+    //PushDblArgStack( t, *ury );
+    //PushDblArgStack( t, *urx );
+    UnwindAndProcessTokenStack( t, TBOX_TOKEN, localXmlBuffer );
+    ClearOutputBuffer( t );
   }
 
   if ( *word != NULL ) {
